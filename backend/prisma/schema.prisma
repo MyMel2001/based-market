@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  username      String   @unique
+  password      String
+  role          Role     @default(USER)
+  moneroAddress String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  developedProducts Product[]     @relation("Developer")
+  purchases         Transaction[] @relation("Buyer")
+  sales             Transaction[] @relation("Seller")
+
+  @@map("users")
+}
+
+model Product {
+  id            String      @id @default(cuid())
+  title         String
+  description   String
+  productUrl    String
+  imageUrl      String?
+  price         Float       @default(0) // in XMR
+  category      String
+  tags          String[]
+  type          ProductType @default(GAME)
+  developerId   String
+  isActive      Boolean     @default(true)
+  downloadCount Int         @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  developer    User          @relation("Developer", fields: [developerId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("products")
+}
+
+model Transaction {
+  id           String            @id @default(cuid())
+  productId    String
+  buyerId      String
+  sellerId     String
+  amount       Float // in XMR
+  moneroTxHash String?
+  status       TransactionStatus @default(PENDING)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  buyer   User    @relation("Buyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller  User    @relation("Seller", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+enum Role {
+  USER
+  DEVELOPER
+  ADMIN
+}
+
+enum ProductType {
+  GAME
+  APP
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+} 

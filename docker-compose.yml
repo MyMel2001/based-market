@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: based_games_db
+    env_file:
+      - docker.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: based_games_backend
+    env_file:
+      - docker.env
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${PORT}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      FRONTEND_URL: ${FRONTEND_URL}
+      MONERO_DAEMON_URL: ${MONERO_DAEMON_URL}
+      MONERO_WALLET_RPC_URL: ${MONERO_WALLET_RPC_URL}
+      CREATE_SAMPLE_DATA: ${CREATE_SAMPLE_DATA}
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npm run dev
+
+  # Frontend React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: based_games_frontend
+    env_file:
+      - docker.env
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    command: npm run dev
+
+  # Monero Daemon
+  monerod:
+    image: sethsimmons/simple-monerod:latest
+    container_name: based_games_monerod
+    ports:
+      - "18080:18080"  # P2P port
+      - "18081:18081"  # RPC port
+    volumes:
+      - monerod_data:/home/monero
+    command: [
+      "--rpc-bind-ip=0.0.0.0",
+      "--rpc-bind-port=18081", 
+      "--confirm-external-bind",
+      "--non-interactive",
+      "--testnet",
+      "--disable-dns-checkpoints",
+      "--log-level=1"
+    ]
+    restart: unless-stopped
+
+  # Monero Wallet RPC
+  monero-wallet-rpc:
+    image: sethsimmons/simple-monerod:latest
+    container_name: based_games_wallet_rpc
+    ports:
+      - "18083:18083"
+    volumes:
+      - wallet_data:/home/monero
+    depends_on:
+      - monerod
+    command: [
+      "monero-wallet-rpc",
+      "--daemon-address=monerod:18081",
+      "--rpc-bind-ip=0.0.0.0",
+      "--rpc-bind-port=18083",
+      "--confirm-external-bind",
+      "--wallet-file=/home/monero/marketplace-wallet",
+      "--password=dev-wallet-password",
+      "--testnet",
+      "--log-level=1"
+    ]
+    restart: unless-stopped
+
+  # Adminer for database management (optional)
+  adminer:
+    image: adminer:latest
+    container_name: based_games_adminer
+    env_file:
+      - docker.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+  monerod_data:
+  wallet_data: 
