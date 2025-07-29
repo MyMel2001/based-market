@@ -5,7 +5,7 @@ import {
   Bars3Icon, 
   XMarkIcon, 
   UserIcon, 
-  GameController2Icon,
+  PlayIcon,
   PlusIcon,
   CogIcon
 } from '@heroicons/react/24/outline'
@@ -27,7 +27,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <GameController2Icon className="h-8 w-8 text-primary-600" />
+            <PlayIcon className="h-8 w-8 text-primary-600" />
             <span className="text-xl font-bold text-gray-900">Based Marketplace</span>
           </Link>
 

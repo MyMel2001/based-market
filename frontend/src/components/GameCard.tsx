@@ -5,7 +5,7 @@ import {
   CurrencyDollarIcon,
   UserIcon,
   TagIcon,
-  GameController2Icon,
+  PlayIcon,
   DevicePhoneMobileIcon
 } from '@heroicons/react/24/outline'
 
@@ -20,7 +20,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   const getTypeIcon = () => {
     return product.type === 'GAME' ? 
-      <GameController2Icon className="h-4 w-4" /> : 
+      <PlayIcon className="h-4 w-4" /> : 
       <DevicePhoneMobileIcon className="h-4 w-4" />
   }
 
