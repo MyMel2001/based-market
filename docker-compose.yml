@@ -62,8 +62,8 @@ services:
   # Backend API Server
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./backend/Dockerfile
     container_name: based-market-backend
     restart: unless-stopped
     depends_on:

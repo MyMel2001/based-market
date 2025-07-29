@@ -1,53 +1,53 @@
 FROM node:18-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies for SQLite and better-sqlite3
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    sqlite
+# Install dependencies for native modules and curl for health checks
+RUN apk add --no-cache python3 make g++ sqlite curl
 
-# Copy package files
+# Copy root package.json for workspace setup
 COPY package*.json ./
-COPY ../shared/package.json ../shared/
 
-# Install dependencies
-RUN npm ci --only=production
+# Copy shared package
+COPY shared/ ./shared/
 
-# Copy application code
-COPY . .
+# Copy backend package files  
+COPY backend/package*.json ./backend/
+COPY backend/tsconfig.json ./backend/
 
-# Copy shared types
-COPY ../shared ../shared
+# Install root dependencies first (for workspace setup)
+RUN npm install
 
-# Create data directory for SQLite and QuickDB files
-RUN mkdir -p /app/data
-
-# Generate Prisma client
-RUN npx prisma generate
-
-# Build the application
+# Build shared package first
+WORKDIR /app/shared
 RUN npm run build
 
+# Install backend dependencies
+WORKDIR /app/backend
+RUN npm ci --only=production
+
+# Copy backend source code
+COPY backend/ ./
+
+# Build backend
+RUN npm run build
+
+# Create data directory for SQLite
+RUN mkdir -p /app/data
+
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S marketplace -u 1001 -G nodejs
+RUN addgroup -g 1001 -S marketplace && \
+    adduser -S marketplace -u 1001
 
-# Change ownership of app directory
-RUN chown -R marketplace:nodejs /app
+# Change ownership
+RUN chown -R marketplace:marketplace /app
 
-# Switch to non-root user
 USER marketplace
-
-# Expose port
-EXPOSE 3001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3001/api/health || exit 1
+  CMD curl -f http://localhost:${PORT:-3001}/health || exit 1
 
-# Start command
+EXPOSE 3001
+
 CMD ["npm", "start"] 
