@@ -65,7 +65,8 @@ class QuickDBServiceImpl implements QuickDBService {
   }
 
   async deleteCache(key: string): Promise<boolean> {
-    return await quickDB.delete(`cache:${key}`);
+    const result = await quickDB.delete(`cache:${key}`);
+    return result > 0;
   }
 
   async clearCache(): Promise<void> {
@@ -87,7 +88,8 @@ class QuickDBServiceImpl implements QuickDBService {
   }
 
   async deleteSession(sessionId: string): Promise<boolean> {
-    return await quickDB.delete(`session:${sessionId}`);
+    const result = await quickDB.delete(`session:${sessionId}`);
+    return result > 0;
   }
 
   // Rate limiting

@@ -3,6 +3,8 @@ import { MongoClient, Db } from 'mongodb';
 import ActivitypubExpress from 'activitypub-express';
 import crypto from 'crypto';
 import { env } from '../config/env';
+import { prisma } from '../lib/prisma';
+import { quickDBService } from './quickdb';
 
 export interface ActivityPubUser {
   id: string;
@@ -26,6 +28,7 @@ export interface ActivityPubUser {
 }
 
 export interface ActivityPubProduct {
+  '@context'?: string | (string | object)[];
   id: string;
   type: 'Article';
   name: string;
@@ -44,6 +47,7 @@ export interface ActivityPubProduct {
 }
 
 export interface ActivityPubTransaction {
+  '@context'?: string | (string | object)[];
   id: string;
   type: 'Purchase' | 'Payment';
   actor: string; // buyer ID
@@ -62,6 +66,7 @@ class ActivityPubService {
   private mongoClient: MongoClient | null = null;
   private domain: string;
   private baseUrl: string;
+  private initialized: boolean = false;
 
   constructor() {
     this.domain = env.ACTIVITYPUB_DOMAIN || 'localhost:3001';

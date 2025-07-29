@@ -253,7 +253,6 @@ class ActivityPubStorage implements StorageInterface {
       id: this.extractIdFromUrl(apUser.id),
       email: apUser.email || '',
       username: apUser.preferredUsername,
-      password: '', // Not stored in ActivityPub
       role: apUser.role,
       moneroAddress: apUser.moneroAddress,
       createdAt: apUser.createdAt,

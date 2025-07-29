@@ -61,7 +61,6 @@ class MoneroService {
     try {
       const transfers = await this.wallet.getIncomingTransfers({
         accountIndex,
-        isConfirmed: true,
       });
       
       return transfers.map(transfer => ({
@@ -69,7 +68,7 @@ class MoneroService {
         amount: transfer.getAmount().toString(),
         address: transfer.getAddress(),
         confirmations: transfer.getTx()?.getNumConfirmations() || 0,
-        timestamp: transfer.getTx()?.getTimestamp(),
+        timestamp: transfer.getTx()?.getBlock()?.getTimestamp(),
       }));
     } catch (error) {
       console.error('Error getting incoming transfers:', error);
