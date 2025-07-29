@@ -1,5 +1,4 @@
 import express from 'express';
-import { MongoClient, Db } from 'mongodb';
 import ActivitypubExpress from 'activitypub-express';
 import crypto from 'crypto';
 import { env } from '../config/env';
@@ -62,8 +61,6 @@ export interface ActivityPubTransaction {
 
 class ActivityPubService {
   private apex: any;
-  private db: Db | null = null;
-  private mongoClient: MongoClient | null = null;
   private domain: string;
   private baseUrl: string;
   private initialized: boolean = false;
@@ -74,11 +71,8 @@ class ActivityPubService {
   }
 
   async initialize(): Promise<void> {
-    // Connect to MongoDB for ActivityPub storage
-    const mongoUrl = env.ACTIVITYPUB_MONGO_URL || 'mongodb://localhost:27017/basedmarket_activitypub';
-    this.mongoClient = new MongoClient(mongoUrl);
-    await this.mongoClient.connect();
-    this.db = this.mongoClient.db();
+    // Ensure SQLite tables for ActivityPub storage
+    await this.ensureTables();
 
     // Configure ActivityPub routes
     const routes = {
@@ -125,11 +119,10 @@ class ActivityPubService {
       ]
     });
 
-    // Set up database
-    this.apex.store.db = this.db;
-    await this.apex.store.setup();
+    // Set up SQLite-based storage
+    await this.ensureTables();
 
-    console.log('ActivityPub service initialized with decentralized storage');
+    console.log('ActivityPub service initialized with SQLite storage');
   }
 
   // Create ActivityPub Actor from User data
@@ -159,7 +152,7 @@ class ActivityPubService {
     };
 
     // Store the actor
-    await this.apex.store.saveObject(actorWithCustomProps);
+    await this.saveActorToSQLite(actorWithCustomProps);
 
     // Create initial activity announcing the user
     const createActivity = {
@@ -217,7 +210,7 @@ class ActivityPubService {
     };
 
     // Store the product object
-    await this.apex.store.saveObject(product);
+    await this.saveObjectToSQLite(product);
 
     // Create activity announcing the product
     const createActivity = {
@@ -274,7 +267,7 @@ class ActivityPubService {
     };
 
     // Store the transaction
-    await this.apex.store.saveObject(transaction);
+    await this.saveObjectToSQLite(transaction);
 
     // Create purchase activity
     const purchaseActivity = {
@@ -296,17 +289,17 @@ class ActivityPubService {
   // Get user by ID or username
   async getUser(identifier: string): Promise<ActivityPubUser | null> {
     try {
-      let actor;
+      let actorId: string;
       
       if (identifier.startsWith('http')) {
         // Full ActivityPub ID
-        actor = await this.apex.store.getObject(identifier);
+        actorId = identifier;
       } else {
         // Username lookup
-        const actorId = `${this.baseUrl}/ap/u/${identifier}`;
-        actor = await this.apex.store.getObject(actorId);
+        actorId = `${this.baseUrl}/ap/u/${identifier}`;
       }
 
+      const actor = await this.getActorFromSQLite(actorId);
       return actor as ActivityPubUser;
     } catch (error) {
       console.error('Error getting user:', error);
@@ -317,7 +310,7 @@ class ActivityPubService {
   // Get product by ID
   async getProduct(productId: string): Promise<ActivityPubProduct | null> {
     try {
-      const product = await this.apex.store.getObject(productId);
+      const product = await this.getObjectFromSQLite(productId);
       return product as ActivityPubProduct;
     } catch (error) {
       console.error('Error getting product:', error);
@@ -334,23 +327,37 @@ class ActivityPubService {
     offset?: number;
   } = {}): Promise<ActivityPubProduct[]> {
     try {
-      // Query the MongoDB collection directly for complex filtering
-      if (!this.db) throw new Error('Database not initialized');
+      // Query SQLite using raw SQL
+      let whereConditions = "type = 'Article'";
+      const params: any[] = [];
+      let paramIndex = 1;
 
-      const query: any = { type: 'Article' };
-      
-      if (filters.category) query.category = filters.category;
-      if (filters.type) query.productType = filters.type;
-      if (filters.developerId) query.attributedTo = filters.developerId;
+      if (filters.category) {
+        whereConditions += ` AND JSON_EXTRACT(data, '$.category') = $${paramIndex}`;
+        params.push(filters.category);
+        paramIndex++;
+      }
+      if (filters.type) {
+        whereConditions += ` AND JSON_EXTRACT(data, '$.productType') = $${paramIndex}`;
+        params.push(filters.type);
+        paramIndex++;
+      }
+      if (filters.developerId) {
+        whereConditions += ` AND JSON_EXTRACT(data, '$.attributedTo') = $${paramIndex}`;
+        params.push(filters.developerId);
+        paramIndex++;
+      }
 
-      const products = await this.db.collection('objects')
-        .find(query)
-        .limit(filters.limit || 20)
-        .skip(filters.offset || 0)
-        .sort({ published: -1 })
-        .toArray();
+      const query = `
+        SELECT data FROM activitypub_objects 
+        WHERE ${whereConditions}
+        ORDER BY JSON_EXTRACT(data, '$.published') DESC
+        LIMIT ${filters.limit || 20}
+        OFFSET ${filters.offset || 0}
+      `;
 
-      return products as unknown as ActivityPubProduct[];
+      const result = await prisma.$queryRawUnsafe(query, ...params) as Array<{data: string}>;
+      return result.map(row => JSON.parse(row.data)) as ActivityPubProduct[];
     } catch (error) {
       console.error('Error getting products:', error);
       return [];
@@ -360,21 +367,14 @@ class ActivityPubService {
   // Get transactions for a user
   async getUserTransactions(userId: string): Promise<ActivityPubTransaction[]> {
     try {
-      if (!this.db) throw new Error('Database not initialized');
+      const result = await prisma.$queryRaw<Array<{data: string}>>`
+        SELECT data FROM activitypub_objects 
+        WHERE type = 'Purchase' 
+        AND (JSON_EXTRACT(data, '$.actor') = ${userId} OR JSON_EXTRACT(data, '$.target') = ${userId})
+        ORDER BY JSON_EXTRACT(data, '$.published') DESC
+      `;
 
-      const query = {
-        $or: [
-          { actor: userId, type: 'Purchase' },
-          { target: userId, type: 'Purchase' }
-        ]
-      };
-
-      const transactions = await this.db.collection('objects')
-        .find(query)
-        .sort({ published: -1 })
-        .toArray();
-
-      return transactions as unknown as ActivityPubTransaction[];
+             return result.map((row: {data: string}) => JSON.parse(row.data)) as ActivityPubTransaction[];
     } catch (error) {
       console.error('Error getting transactions:', error);
       return [];
@@ -388,7 +388,7 @@ class ActivityPubService {
     moneroTxHash?: string
   ): Promise<ActivityPubTransaction | null> {
     try {
-      const transaction = await this.apex.store.getObject(transactionId) as ActivityPubTransaction;
+      const transaction = await this.getObjectFromSQLite(transactionId) as ActivityPubTransaction;
       if (!transaction) return null;
 
       const updatedTransaction = {
@@ -398,7 +398,7 @@ class ActivityPubService {
         updated: new Date()
       };
 
-      await this.apex.store.saveObject(updatedTransaction);
+      await this.saveObjectToSQLite(updatedTransaction);
 
       // Create Update activity
       const updateActivity = {

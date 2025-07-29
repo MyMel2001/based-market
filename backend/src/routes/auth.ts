@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { z } from 'zod';
 import { env } from '../config/env';
 import { authenticate, AuthRequest } from '../middleware/auth';
@@ -64,7 +64,7 @@ router.post('/register', async (req, res) => {
     // Generate JWT token
     const payload = { id: userResponse.id, email: userResponse.email };
     const secret = env.JWT_SECRET as string;
-    const options = { expiresIn: env.JWT_EXPIRES_IN as string | number };
+    const options: SignOptions = { expiresIn: env.JWT_EXPIRES_IN };
     const token = jwt.sign(payload, secret, options);
 
     res.status(201).json({
@@ -121,7 +121,7 @@ router.post('/login', async (req, res) => {
     // Generate JWT token
     const payload = { id: user.id, email: user.email };
     const secret = env.JWT_SECRET as string;
-    const options = { expiresIn: env.JWT_EXPIRES_IN as string | number };
+    const options: SignOptions = { expiresIn: env.JWT_EXPIRES_IN };
     const token = jwt.sign(payload, secret, options);
 
     const { password: _, ...userWithoutPassword } = user;
