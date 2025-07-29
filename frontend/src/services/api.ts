@@ -2,16 +2,15 @@ import axios from 'axios'
 import { 
   User, 
   Product,
-  Game, 
   Transaction, 
   LoginRequest, 
   RegisterRequest, 
   CreateProductRequest,
   CreateGameRequest,
-  ApiResponse,
   PaginatedResponse,
   ProductFilters,
-  GameFilters
+  GameFilters,
+  AuthResponse
 } from 'shared'
 
 const api = axios.create({
@@ -43,8 +42,8 @@ api.interceptors.response.use(
 )
 
 export const authApi = {
-  login: (data: LoginRequest) => api.post<any, User>('/auth/login', data),
-  register: (data: RegisterRequest) => api.post<any, User>('/auth/register', data),
+  login: (data: LoginRequest) => api.post<any, AuthResponse>('/auth/login', data),
+  register: (data: RegisterRequest) => api.post<any, AuthResponse>('/auth/register', data),
   getMe: () => api.get<any, User>('/auth/me'),
 }
 

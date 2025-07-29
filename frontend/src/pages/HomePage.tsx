@@ -142,7 +142,7 @@ const HomePage = () => {
       )}
 
       {/* Error State */}
-      {error && (
+      {!!error && (
         <div className="text-center py-16">
           <p className="text-red-600">Failed to load products. Please try again.</p>
         </div>
