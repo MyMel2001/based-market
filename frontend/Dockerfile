@@ -26,9 +26,9 @@ RUN npm install
 WORKDIR /app/shared
 RUN npm run build
 
-# Install frontend dependencies
+# Install frontend dependencies (including devDependencies for build tools)
 WORKDIR /app/frontend
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy frontend source code
 COPY frontend/ ./
