@@ -1,4 +1,4 @@
-import { MoneroWalletRpc, MoneroNetworkType } from 'monero-javascript';
+import { MoneroWalletRpc, MoneroNetworkType } from 'monero-ts';
 import { env } from '@/config/env';
 
 class MoneroService {
