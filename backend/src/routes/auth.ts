@@ -64,7 +64,7 @@ router.post('/register', async (req, res) => {
     // Generate JWT token
     const payload = { id: userResponse.id, email: userResponse.email };
     const secret = env.JWT_SECRET as string;
-    const options = { expiresIn: env.JWT_EXPIRES_IN as string };
+    const options = { expiresIn: env.JWT_EXPIRES_IN };
     const token = jwt.sign(payload, secret, options);
 
     res.status(201).json({
@@ -121,7 +121,7 @@ router.post('/login', async (req, res) => {
     // Generate JWT token
     const payload = { id: user.id, email: user.email };
     const secret = env.JWT_SECRET as string;
-    const options = { expiresIn: env.JWT_EXPIRES_IN as string };
+    const options = { expiresIn: env.JWT_EXPIRES_IN };
     const token = jwt.sign(payload, secret, options);
 
     const { password: _, ...userWithoutPassword } = user;

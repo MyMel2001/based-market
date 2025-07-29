@@ -3,7 +3,7 @@ import { MongoClient, Db } from 'mongodb';
 import ActivitypubExpress from 'activitypub-express';
 import crypto from 'crypto';
 import { env } from '../config/env';
-import { prisma } from '../lib/prisma';
+import prisma from '../config/database';
 import { quickDBService } from './quickdb';
 
 export interface ActivityPubUser {
@@ -350,7 +350,7 @@ class ActivityPubService {
         .sort({ published: -1 })
         .toArray();
 
-      return products as ActivityPubProduct[];
+      return products as unknown as ActivityPubProduct[];
     } catch (error) {
       console.error('Error getting products:', error);
       return [];
@@ -374,7 +374,7 @@ class ActivityPubService {
         .sort({ published: -1 })
         .toArray();
 
-      return transactions as ActivityPubTransaction[];
+      return transactions as unknown as ActivityPubTransaction[];
     } catch (error) {
       console.error('Error getting transactions:', error);
       return [];
