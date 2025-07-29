@@ -2,8 +2,8 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install dependencies for native modules and curl for health checks
-RUN apk add --no-cache python3 make g++ sqlite curl
+# Install dependencies for native modules, git for npm, and curl for health checks
+RUN apk add --no-cache python3 make g++ sqlite curl git
 
 # Copy root package.json for workspace setup
 COPY package*.json ./

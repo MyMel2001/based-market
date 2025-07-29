@@ -2,8 +2,8 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install dependencies
-RUN apk add --no-cache curl
+# Install dependencies (git for npm, curl for health checks)
+RUN apk add --no-cache curl git
 
 # Copy root package.json for workspace setup
 COPY package*.json ./
