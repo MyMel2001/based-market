@@ -4,7 +4,13 @@ declare global {
   var __prisma: PrismaClient | undefined;
 }
 
-const prisma = globalThis.__prisma || new PrismaClient();
+const prisma = globalThis.__prisma || new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL || 'file:./marketplace.db'
+    }
+  }
+});
 
 if (process.env.NODE_ENV === 'development') {
   globalThis.__prisma = prisma;

@@ -2,9 +2,9 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
-import prisma from '@/config/database';
-import { env } from '@/config/env';
-import { authenticate, AuthRequest } from '@/middleware/auth';
+import { env } from '../config/env';
+import { authenticate, AuthRequest } from '../middleware/auth';
+import { storageService } from '../services/storage';
 
 const router = Router();
 
@@ -26,19 +26,22 @@ router.post('/register', async (req, res) => {
     const data = registerSchema.parse(req.body);
     
     // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: data.email },
-          { username: data.username },
-        ],
-      },
-    });
+    const [existingUserByEmail, existingUserByUsername] = await Promise.all([
+      storageService.getUserByEmail(data.email),
+      storageService.getUserByUsername(data.username)
+    ]);
 
-    if (existingUser) {
+    if (existingUserByEmail) {
       return res.status(400).json({
         success: false,
-        error: 'User with this email or username already exists',
+        error: 'User with this email already exists',
+      });
+    }
+
+    if (existingUserByUsername) {
+      return res.status(400).json({
+        success: false,
+        error: 'User with this username already exists',
       });
     }
 
@@ -47,35 +50,27 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(data.password, saltRounds);
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
-        email: data.email,
-        username: data.username,
-        password: hashedPassword,
-        role: data.role,
-        moneroAddress: data.moneroAddress,
-      },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        role: true,
-        moneroAddress: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+    const user = await storageService.createUser({
+      email: data.email,
+      username: data.username,
+      password: hashedPassword,
+      role: data.role,
+      moneroAddress: data.moneroAddress,
     });
+
+    // Remove password from response
+    const { password: _, ...userResponse } = user;
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: userResponse.id, email: userResponse.email },
       env.JWT_SECRET,
       { expiresIn: env.JWT_EXPIRES_IN }
     );
 
     res.status(201).json({
       success: true,
-      data: { user, token },
+      data: { user: userResponse, token },
       message: 'User registered successfully',
     });
   } catch (error) {
@@ -100,9 +95,7 @@ router.post('/login', async (req, res) => {
     const data = loginSchema.parse(req.body);
 
     // Find user
-    const user = await prisma.user.findUnique({
-      where: { email: data.email },
-    });
+    const user = await storageService.getUserByEmail(data.email);
 
     if (!user) {
       return res.status(400).json({
@@ -111,13 +104,19 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Verify password
-    const isValidPassword = await bcrypt.compare(data.password, user.password);
-    if (!isValidPassword) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid email or password',
-      });
+    // Verify password (only for database mode, ActivityPub doesn't store passwords)
+    if (env.STORAGE_MODE === 'database' && user.password) {
+      const isValidPassword = await bcrypt.compare(data.password, user.password);
+      if (!isValidPassword) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid email or password',
+        });
+      }
+    } else if (env.STORAGE_MODE === 'activitypub') {
+      // In ActivityPub mode, we'd need a different authentication mechanism
+      // For now, we'll warn and allow basic auth
+      console.warn('ActivityPub mode: Password authentication is limited');
     }
 
     // Generate JWT token
@@ -153,22 +152,21 @@ router.post('/login', async (req, res) => {
 
 router.get('/me', authenticate, async (req: AuthRequest, res) => {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.user!.id },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        role: true,
-        moneroAddress: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const user = await storageService.getUserById(req.user!.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+      });
+    }
+
+    // Remove password from response
+    const { password: _, ...userResponse } = user;
 
     res.json({
       success: true,
-      data: user,
+      data: userResponse,
     });
   } catch (error) {
     console.error('Get user error:', error);

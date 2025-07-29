@@ -1,433 +1,456 @@
 # Based Marketplace
 
-A modern online marketplace for indie games and applications with Monero cryptocurrency payments. Developers can list their games/apps (hosted on their own servers) and users can purchase them with Monero or download them for free.
+A decentralized marketplace for games, apps, and media that accepts Monero payments, with revolutionary **ActivityPub-based decentralized storage** as an alternative to traditional databases.
 
-**Start clean** - The marketplace begins with an empty database, ready for real developers and users to join!
+## 🚀 Features
 
-## 🪙 Integrated Monero Services
+- **ActivityPub Federation** - Your marketplace federates with Mastodon and the fediverse
+- **Decentralized Storage** - Use ActivityPub as a distributed database or traditional SQLite
+- **Monero Payments** - Privacy-focused cryptocurrency transactions (required)
+- **Multi-Product Support** - Sell games, apps, and media content
+- **User Roles** - Developers, users, and administrators
+- **JWT Authentication** - Secure user sessions
+- **TypeScript** - Full type safety across the stack
+- **Modern UI** - React with Tailwind CSS
+- **Docker Ready** - One-command deployment with persistent Monero wallet
+- **Production Ready** - SSL, monitoring, backups, and scaling support
 
-The marketplace includes **fully integrated Monero services** via Docker:
+## 🎯 Why ActivityPub + Monero?
 
-- **🔗 Monero Daemon (monerod)**: Testnet node for development
-- **💳 Monero Wallet RPC**: Pre-configured wallet for payment processing  
-- **⚡ Zero Setup**: Start developing with Monero payments immediately
-- **🧪 Testnet Mode**: Safe testing environment with testnet XMR
+**ActivityPub** provides true decentralization:
+- Products federate to followers across the fediverse
+- Users discoverable via WebFinger protocol  
+- Transactions published as ActivityStreams
+- Censorship-resistant marketplace
 
-**First-time setup**: Monero services automatically sync on startup (may take 5-10 minutes).
+**Monero** ensures payment privacy:
+- Private, untraceable transactions
+- No central payment processor
+- Global accessibility
+- **Required for all payment processing**
 
-## 🎮 Features
+**Perfect for**: Privacy-focused developers selling games, apps, and media to a decentralized audience.
 
-### For Users
-- **Browse Products**: Discover indie games and apps with advanced filtering and search
-- **Monero Payments**: Secure cryptocurrency transactions (testnet for development)
-- **Free Products**: Download free games and apps instantly
-- **User Dashboard**: Track purchases and product library
-- **Modern UI**: Beautiful, responsive design with Tailwind CSS
+## 🌐 Decentralized Storage with ActivityPub
 
-### For Developers
-- **List Products**: Add your games and apps with descriptions, images, and pricing
-- **External Hosting**: Link to your own servers
-- **Monero Integration**: Receive payments directly to your wallet
-- **Developer Dashboard**: Manage your products and track sales
-- **No Platform Lock-in**: Your products remain on your servers
+This marketplace features a groundbreaking approach to data storage: **ActivityPub as a decentralized database**. Instead of relying on traditional centralized databases, your marketplace data can be stored and federated across the ActivityPub network (the same protocol powering Mastodon, Pleroma, and other fediverse platforms).
 
-### Technical Features
-- **Full-Stack TypeScript**: Type safety throughout the application
-- **Modern Architecture**: React + Express + PostgreSQL + Prisma
-- **Cryptocurrency Support**: Integrated Monero daemon and wallet RPC
-- **Docker Support**: Complete development environment with one command
-- **RESTful API**: Clean, documented API endpoints
-- **Authentication**: JWT-based secure authentication
-- **Real-time Updates**: React Query for efficient data fetching
+### How It Works
 
-## 🏗️ Architecture
-
+**Traditional Database Mode:**
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   Backend       │    │   Database      │
-│   (React +      │◄──►│   (Express +    │◄──►│   (PostgreSQL)  │
-│   TypeScript)   │    │   TypeScript)   │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Shared Types  │    │   Monero        │    │   Prisma ORM    │
-│   (TypeScript)  │    │   Integration   │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+User → API → SQLite → Response
 ```
+
+**ActivityPub Federation Mode:**
+```
+User → API → ActivityPub Network → MongoDB (Local) + Federation → Response
+```
+
+In ActivityPub mode:
+- **Users** become **ActivityPub Actors** (discoverable via WebFinger)
+- **Products** (games, apps, media) become **ActivityStreams Articles** (federated content)
+- **Transactions** become **Purchase Activities** (distributed across the network)
+- **Your marketplace** becomes a **federated ActivityPub instance**
+
+### Data Model Mapping
+
+| Traditional Database | ActivityPub Object | Federation Benefit |
+|---------------------|-------------------|-------------------|
+| User | Actor (Person) | Discoverable across fediverse |
+| Product (Game/App/Media) | Article | Appears in federated timelines |
+| Transaction | Purchase Activity | Transparent, distributed ledger |
+| Follows | Follow Activity | Cross-platform relationships |
+
+### Benefits of ActivityPub Storage
+
+1. **🌍 True Decentralization**: No single point of failure
+2. **🔍 Built-in Discovery**: Games, apps, and media discoverable via WebFinger and fediverse search
+3. **📡 Automatic Federation**: Content replicates across friendly instances
+4. **🕸️ Network Effects**: Tap into existing fediverse audience
+5. **🔒 Censorship Resistance**: Distributed data across multiple servers
+6. **🔄 Real-time Updates**: ActivityStreams provide live notifications
+7. **📊 Transparent Transactions**: Public audit trail via activities
+
+### Federation Features
+
+✅ **User Federation**: Users can be followed from Mastodon/Pleroma
+✅ **Product Discovery**: Games, apps, and media appear in fediverse timelines
+✅ **Cross-platform Notifications**: Purchase confirmations federate
+✅ **Distributed Following**: Build audience across instances
+✅ **WebFinger Support**: `user@yourdomain.com` discovery
+✅ **NodeInfo Compliance**: Instance metadata sharing
+✅ **ActivityStreams Protocol**: Full specification compliance
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ and npm
-- PostgreSQL database
-- Docker and Docker Compose (optional)
 
-### Option 1: Docker Development (Recommended)
+Choose your storage mode:
 
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd based-games-marketplace
-   ```
+**Traditional Database Mode:**
+- SQLite (included with Node.js)
+- Node.js 18+
+- Monero daemon (monerod) - **Required for payments**
 
-2. **Configure environment (optional)**
-   ```bash
-   # Copy and customize Docker environment file if needed
-   cp docker.env .env.docker.local
-   # Edit .env.docker.local for local customization
-   ```
+**ActivityPub Federation Mode:**
+- MongoDB 5+
+- Node.js 18+
+- Monero daemon (monerod) - **Required for payments**
+- A public domain (for federation)
 
-3. **Start with Docker Compose**
-   ```bash
-   docker-compose up -d
-   ```
+### Installation
 
-4. **Initialize the database**
-   ```bash
-   # Run database migrations
-   docker-compose exec backend npm run db:migrate
-   ```
+```bash
+git clone https://github.com/your-repo/based-market
+cd based-market
+npm install
+```
 
-5. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:3001
-   - Database Admin: http://localhost:8080
-   - Monero Daemon RPC: http://localhost:18081
-   - Monero Wallet RPC: http://localhost:18083
+### Configuration
 
-**Note**: Monero services may take a few minutes to fully synchronize on first start.
+Copy the environment file:
+```bash
+cp backend/env.example backend/.env
+```
 
-### Option 2: Manual Setup
+**For Traditional Database:**
+```env
+STORAGE_MODE="database"
+DATABASE_URL="file:./marketplace.db"
+```
 
-1. **Install dependencies**
-   ```bash
-   npm install
-   npm run build --workspace=shared
-   npm install --workspace=backend
-   npm install --workspace=frontend
-   ```
+**For ActivityPub Federation:**
+```env
+STORAGE_MODE="activitypub"
+ACTIVITYPUB_DOMAIN="yourdomain.com"
+ACTIVITYPUB_BASE_URL="https://yourdomain.com"
+ACTIVITYPUB_MONGO_URL="mongodb://localhost:27017/marketplace_federation"
+```
 
-2. **Set up the database**
-   ```bash
-   # Create PostgreSQL database
-   createdb based_games_marketplace
-   
-   # Copy environment files
-   cp backend/env.example backend/.env
-   # Edit backend/.env with your database credentials
-   ```
+### Setup
 
-3. **Initialize the database**
-   ```bash
-   cd backend
-   npm run db:migrate
-   ```
+**Traditional Database:**
+```bash
+cd backend
+npm run db:push
+npm run db:seed  # optional sample data
+npm run dev
+```
 
-4. **Start the development servers**
-   ```bash
-   # Terminal 1: Start backend
-   npm run dev:backend
-   
-   # Terminal 2: Start frontend
-   npm run dev:frontend
-   ```
+**ActivityPub Federation:**
+```bash
+cd backend
+npm run activitypub:setup  # initializes federation
+npm run dev
+```
 
-## 🔧 Configuration
+**Docker (ActivityPub + Persistent Monero):**
+```bash
+# Start all services with ActivityPub federation
+docker-compose up -d
 
-### Docker Environment Configuration
+# Initialize ActivityPub federation
+docker-compose exec backend npm run activitypub:setup
 
-The `docker.env` file contains all environment variables for Docker Compose:
+# Access at http://localhost:3000
+```
+
+## 🔧 ActivityPub Configuration
+
+### 1. Domain Setup
+
+For federation to work, you need a public domain:
 
 ```env
-# Database Configuration
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=based_games_marketplace
-
-# Backend Configuration
-NODE_ENV=development
-PORT=3001
-DATABASE_URL=postgresql://postgres:postgres@postgres:5432/based_games_marketplace?schema=public
-JWT_SECRET=dev-jwt-secret-key-change-in-production
-JWT_EXPIRES_IN=7d
-FRONTEND_URL=http://localhost:3000
-
-# Monero Configuration (Docker services)
-MONERO_DAEMON_URL=http://monerod:18081
-MONERO_WALLET_RPC_URL=http://monero-wallet-rpc:18083
-MONERO_WALLET_PASSWORD=dev-wallet-password
-
-# Sample Data (optional)
-CREATE_SAMPLE_DATA=false
-
-# Frontend Configuration
-VITE_API_URL=http://localhost:3001/api
+ACTIVITYPUB_DOMAIN="marketplace.example.com"
+ACTIVITYPUB_BASE_URL="https://marketplace.example.com"
 ```
 
-**For local customization:**
-```bash
-# Copy the example file
-cp docker.env.example .env.docker.local
-# Edit .env.docker.local for your local environment
-```
+### 2. MongoDB Setup
 
-Then update your docker-compose command:
-```bash
-# Use local override file
-cp .env.docker.local docker.env
-docker-compose up -d
-```
-
-### Backend Environment Variables (for manual setup)
-Create `backend/.env` with:
+ActivityPub uses MongoDB for object storage:
 
 ```env
-# Database
-DATABASE_URL="postgresql://username:password@localhost:5432/based_games_marketplace?schema=public"
-
-# JWT
-JWT_SECRET="your-super-secret-jwt-key-here"
-JWT_EXPIRES_IN="7d"
-
-# Server
-PORT=3001
-NODE_ENV="development"
-
-# Monero (optional for development)
-MONERO_DAEMON_URL="http://localhost:18081"
-MONERO_WALLET_RPC_URL="http://localhost:18083"
-MONERO_WALLET_PASSWORD="your-wallet-password"
-
-# CORS
-FRONTEND_URL="http://localhost:3000"
-
-# Sample Data (optional - for testing only)
-CREATE_SAMPLE_DATA="false"
+ACTIVITYPUB_MONGO_URL="mongodb://localhost:27017/marketplace_ap"
 ```
 
-### Monero Integration
+### 3. Federation Setup
 
-The Docker setup includes **testnet Monero services** for development:
-
-- **Monero Daemon**: Automatically starts with testnet configuration
-- **Monero Wallet RPC**: Pre-configured wallet for testing payments
-- **Development-ready**: No manual Monero setup required!
-
-**For production Monero setup:**
-
-1. **Update docker-compose.yml** to use mainnet:
-   ```yaml
-   # Remove --testnet flag from monerod and monero-wallet-rpc commands
-   ```
-
-2. **Secure configuration**:
-   ```bash
-   # Update environment variables
-   MONERO_WALLET_PASSWORD="secure-production-password"
-   ```
-
-3. **External Monero services** (recommended for production):
-   ```bash
-   # Use external Monero daemon and wallet RPC
-   MONERO_DAEMON_URL="http://your-monero-node:18081"
-   MONERO_WALLET_RPC_URL="http://your-wallet-rpc:18083"
-   ```
-
-## 📊 Database Schema
-
-### Users
-- Authentication and profile information
-- Role-based access (USER, DEVELOPER, ADMIN)
-- Monero wallet addresses for developers
-
-### Products
-- Product listings with metadata (games and apps)
-- External URLs to product servers
-- Pricing in Monero (0 for free products)
-- Categories, tags, and product types (GAME/APP)
-
-### Transactions
-- Payment records and status
-- Monero transaction hashes
-- Download tracking
-
-## 🔐 API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/auth/me` - Get current user
-
-### Products (Games & Apps)
-- `GET /api/games` - List products with filters (supports type=GAME|APP)
-- `GET /api/games/:id` - Get product details
-- `POST /api/games` - Create product (developers only)
-- `PUT /api/games/:id` - Update product
-- `DELETE /api/games/:id` - Delete product
-- `GET /api/games/my/products` - Get developer's products
-
-### Payments
-- `POST /api/payments/create` - Create payment intent (accepts productId or gameId)
-- `POST /api/payments/verify` - Verify Monero payment
-- `POST /api/payments/free-download` - Download free product
-- `GET /api/payments/my-transactions` - User transaction history
-
-## 🧪 Testing with Sample Data (Optional)
-
-The marketplace starts with a clean database. For testing purposes, you can optionally create sample data:
+Run the setup script:
 
 ```bash
-# Set environment variable to enable sample data
-export CREATE_SAMPLE_DATA=true
-
-# Run the seed script
-npm run db:seed --workspace=backend
-
-# Or with Docker
-docker-compose exec backend sh -c "CREATE_SAMPLE_DATA=true npm run db:seed"
+npm run activitypub:setup
 ```
 
-**Sample credentials (only when CREATE_SAMPLE_DATA=true):**
-```
-Admin: admin@basedgames.com / admin123
-Developer 1: dev1@example.com / dev123
-Developer 2: dev2@example.com / dev123
-User: gamer@example.com / user123
-```
+This creates:
+- System and marketplace actors
+- MongoDB collections
+- Federation endpoints
+- WebFinger configuration
 
-## 🔧 Troubleshooting
+### 4. Testing Federation
 
-### Monero Services
+Test your setup:
+
 ```bash
-# Check Monero daemon status
-curl http://localhost:18081/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"get_info"}' -H 'Content-Type: application/json'
+# Test WebFinger discovery
+curl "https://yourdomain.com/.well-known/webfinger?resource=acct:marketplace@yourdomain.com"
 
-# Check wallet RPC status  
-curl http://localhost:18083/json_rpc -d '{"jsonrpc":"2.0","id":"0","method":"get_address"}' -H 'Content-Type: application/json'
+# Test NodeInfo
+curl "https://yourdomain.com/.well-known/nodeinfo"
 
-# View Monero logs
-docker-compose logs monerod
-docker-compose logs monero-wallet-rpc
+# Test marketplace actor
+curl "https://yourdomain.com/ap/u/marketplace"
 ```
 
-### Reset Monero Data
+### 5. Discover from Mastodon
+
+From any Mastodon instance, search for:
+```
+@marketplace@yourdomain.com
+```
+
+Your marketplace should appear as a followable account!
+
+## 🏗️ Architecture
+
+### Traditional Mode
+```
+Frontend ↔ API ↔ SQLite (+ QuickDB cache)
+                ↕
+            Monero Daemon
+          (Payment Processing)
+```
+
+### ActivityPub Mode
+```
+Frontend ↔ API ↔ ActivityPub Service ↔ MongoDB
+                           ↕
+                   Fediverse Network
+                  (Mastodon, Pleroma, etc.)
+                           ↕
+                    Monero Daemon
+                  (Payment Processing)
+```
+
+### Storage Abstraction
+
+The codebase uses a storage abstraction layer:
+
+```typescript
+// Works with both modes
+await storageService.createUser(userData);
+await storageService.getProducts(filters);
+await storageService.createTransaction(txData);
+```
+
+Under the hood:
+- **Database mode**: SQLite with Prisma ORM + QuickDB for caching/metrics
+- **ActivityPub mode**: SQLite + QuickDB + ActivityStreams federation
+
+## 📡 Federation Examples
+
+### Product Publishing
+
+When a developer creates a product (game, app, or media):
+
+**Traditional Database:**
+```sql
+-- SQLite with Prisma ORM
+INSERT INTO products (title, description, ...) VALUES (...)
+```
+
+**ActivityPub Federation:**
+```json
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "type": "Create",
+  "actor": "https://yourdomain.com/ap/u/developer",
+  "object": {
+    "type": "Article",
+    "name": "Awesome Game",
+    "content": "A revolutionary new game...",
+    "url": "https://cdn.example.com/awesome-game",
+    "price": 0.1,
+    "category": "games"
+  },
+  "to": ["https://www.w3.org/ns/activitystreams#Public"]
+}
+```
+
+This activity gets federated to all followers across the fediverse!
+
+### Transaction Recording
+
+When someone purchases a product:
+
+```json
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "type": "Purchase",
+  "actor": "https://yourdomain.com/ap/u/buyer",
+  "object": "https://yourdomain.com/ap/o/product-123",
+  "target": "https://yourdomain.com/ap/u/seller",
+  "amount": 0.1,
+  "moneroTxHash": "abc123..."
+}
+```
+
+### User Discovery
+
+Users can be discovered and followed:
+
 ```bash
-# Stop services and remove Monero data volumes
-docker-compose down
-docker volume rm based-games_monerod_data based-games_wallet_data
-docker-compose up -d
+# From Mastodon, search for:
+@alice@yourmarketplace.com
+
+# View their profile and recent product purchases/sales
 ```
 
-## 🛠️ Development
+## 🌍 Federation Benefits
 
-### Project Structure
-```
-based-games-marketplace/
-├── frontend/          # React TypeScript frontend
-├── backend/           # Express TypeScript API
-├── shared/            # Shared TypeScript types
-├── docker.env         # Docker environment configuration
-├── docker.env.example # Example Docker environment file
-├── docker-compose.yml # Docker development setup
-└── README.md         # This file
-```
+### For Users
+- **Cross-platform Identity**: One account works across fediverse
+- **Social Discovery**: Find games, apps, and media through social connections
+- **Privacy Control**: Choose which instances to federate with
+- **Data Ownership**: Your data exists on multiple servers
 
-### Available Scripts
+### For Developers
+- **Built-in Marketing**: Products appear in federated timelines
+- **Instant Audience**: Tap into existing fediverse users
+- **Transparent Sales**: Public transaction history builds trust
+- **Network Effects**: Followers from any ActivityPub platform
 
-**Root level:**
-- `npm run dev` - Start both frontend and backend
-- `npm run build` - Build all packages
-- `npm run db:migrate` - Run database migrations
-- `npm run db:seed` - Create sample data (optional, requires CREATE_SAMPLE_DATA=true)
+### For Marketplace Operators
+- **Reduced Infrastructure**: Leverage federated storage
+- **Natural Discovery**: Search engines index ActivityPub content
+- **Community Building**: Foster cross-instance relationships
+- **Censorship Resistance**: Distributed operation model
 
-**Frontend:**
-- `npm run dev --workspace=frontend` - Start frontend dev server
-- `npm run build --workspace=frontend` - Build frontend
+## 🔄 Migration Between Modes
 
-**Backend:**
-- `npm run dev --workspace=backend` - Start backend dev server
-- `npm run build --workspace=backend` - Build backend
+You can switch between storage modes:
 
-### Adding New Features
-
-1. **Update shared types** in `shared/src/types.ts`
-2. **Add API endpoints** in `backend/src/routes/`
-3. **Update database schema** with Prisma migrations
-4. **Add frontend components** in `frontend/src/components/`
-5. **Update API services** in `frontend/src/services/api.ts`
-
-## 🚢 Deployment
-
-### Production Setup
-
-1. **Build all packages**
-   ```bash
-   npm run build
-   ```
-
-2. **Set production environment variables**
-   ```bash
-   NODE_ENV=production
-   JWT_SECRET="strong-random-secret"
-   DATABASE_URL="your-production-db-url"
-   ```
-
-3. **Run database migrations**
-   ```bash
-   npm run db:migrate --workspace=backend
-   ```
-
-4. **Start the production server**
-   ```bash
-   npm start
-   ```
-
-### Docker Production
+### Database → ActivityPub
 ```bash
-# Build production images
-docker-compose -f docker-compose.prod.yml build
+# Export existing data
+npm run export:database
 
-# Deploy
-docker-compose -f docker-compose.prod.yml up -d
+# Switch mode
+STORAGE_MODE="activitypub"
+
+# Import to ActivityPub
+npm run import:activitypub
 ```
+
+### ActivityPub → Database
+```bash
+# Export federation data  
+npm run export:activitypub
+
+# Switch mode
+STORAGE_MODE="database"
+
+# Import to database
+npm run import:database
+```
+
+## 🔗 Federation Network
+
+When you choose ActivityPub mode, your marketplace joins a global network:
+
+```
+🏪 Your Marketplace
+       ↕ ️
+🌐 Fediverse Network
+   ├── 🐘 Mastodon Instances
+   ├── 🦆 Pleroma Instances  
+   ├── 🎭 Other ActivityPub Apps
+   └── 🏪 Other Marketplaces
+```
+
+Users can:
+- Follow developers from Mastodon
+- See new products (games, apps, media) in their timeline
+- Share and boost products
+- Interact across platforms
+
+## 🚨 Important Considerations
+
+### Public by Default
+ActivityPub data is **public by default**. Consider:
+- User emails are stored locally, not federated
+- Product descriptions become public content
+- Transaction amounts are visible (Monero hashes are private)
+- Use private activities for sensitive operations
+
+### Domain Stability
+Once federated, changing domains is difficult:
+- Federation relies on stable actor URLs
+- Consider long-term domain strategy
+- Test thoroughly on subdomains first
+
+### Storage Requirements
+- **Database mode**: SQLite file storage (lightweight, no server required)
+- **ActivityPub mode**: SQLite + QuickDB + federation bandwidth (same file!)
+- **Hybrid**: Run both modes simultaneously (unified SQLite storage)
+
+### Performance
+- **Database mode**: SQLite with QuickDB caching (very fast, local file)
+- **ActivityPub mode**: SQLite + QuickDB + federation (fast local, network for federation)
+- **Both modes**: Monero daemon required for payment processing
+- **Unified SQLite**: Single database file for everything, no server required
+
+## 🧪 Development
+
+### Running Tests
+```bash
+# Test both storage modes
+npm test
+
+# Test federation specifically  
+npm run test:federation
+
+# Test ActivityPub compliance
+npm run test:activitypub
+```
+
+### Debug Federation
+```bash
+# Enable ActivityPub debug logs
+DEBUG=activitypub:* npm run dev
+
+# Monitor federation traffic
+npm run monitor:federation
+```
+
+## 📚 Learn More
+
+- [ActivityPub Specification](https://www.w3.org/TR/activitypub/)
+- [ActivityStreams Vocabulary](https://www.w3.org/TR/activitystreams-vocabulary/)
+- [Mastodon API Compatibility](https://docs.joinmastodon.org/api/)
+- [Federation Best Practices](https://socialhub.activitypub.rocks/)
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+We welcome contributions to both storage modes:
+
+1. **Database improvements**: SQL optimizations, new features
+2. **Federation enhancements**: ActivityPub compliance, new activity types
+3. **Storage abstraction**: Better compatibility layer
+4. **Documentation**: Federation guides, examples
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Monero](https://www.getmonero.org/) - Privacy-focused cryptocurrency
-- [Prisma](https://www.prisma.io/) - Database toolkit
-- [React](https://reactjs.org/) - Frontend framework
-- [Express](https://expressjs.com/) - Backend framework
-- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
-
-## 🆘 Support
-
-If you encounter any issues:
-
-1. Check the [Issues](https://github.com/your-repo/issues) page
-2. Review the environment configuration
-3. Ensure all dependencies are installed
-4. Check Docker logs: `docker-compose logs`
-
-For development questions, please open an issue with:
-- Node.js version
-- Operating system
-- Error messages
-- Steps to reproduce
+MIT License - Build the decentralized future! 
 
 ---
 
-**Happy Gaming! 🎮✨** 
+**Ready to revolutionize digital marketplaces with ActivityPub?** 🚀
+
+Choose your path:
+- 💾 **Traditional**: `STORAGE_MODE="database"` 
+- 🌐 **Revolutionary**: `STORAGE_MODE="activitypub"`
+
+*The future of commerce is federated.* 

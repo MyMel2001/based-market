@@ -1,128 +1,155 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: based_games_db
-    env_file:
-      - docker.env
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
-  # Backend API
+
+  # Monero Daemon (monerod) - Required for payments
+  monerod:
+    image: sethsimmons/simple-monerod:latest
+    container_name: based-market-monerod
+    restart: unless-stopped
+    volumes:
+      - monerod_data:/home/monero/.bitmonero
+    ports:
+      - "18080:18080"
+      - "18081:18081"
+    command: >
+      monerod
+      --rpc-bind-ip=0.0.0.0
+      --rpc-bind-port=18081
+      --confirm-external-bind
+      --non-interactive
+      --testnet
+      --log-level=1
+      --max-log-file-size=104857600
+    networks:
+      - based-market-network
+
+  # Monero Wallet RPC - Persistent wallet management
+  monero-wallet-rpc:
+    image: sethsimmons/simple-monerod:latest
+    container_name: based-market-wallet-rpc
+    restart: unless-stopped
+    depends_on:
+      - monerod
+    volumes:
+      - wallet_data:/home/monero/wallet
+    ports:
+      - "18083:18083"
+    environment:
+      - WALLET_PASSWORD=${MONERO_WALLET_PASSWORD:-marketplace123}
+    command: >
+      sh -c "
+      sleep 30 &&
+      if [ ! -f /home/monero/wallet/marketplace-wallet ]; then
+        echo 'Creating new wallet...' &&
+        monero-wallet-cli --testnet --generate-new-wallet /home/monero/wallet/marketplace-wallet --password $$WALLET_PASSWORD --mnemonic-language English --command exit;
+      fi &&
+      monero-wallet-rpc
+      --testnet
+      --rpc-bind-ip=0.0.0.0
+      --rpc-bind-port=18083
+      --wallet-file /home/monero/wallet/marketplace-wallet
+      --password $$WALLET_PASSWORD
+      --confirm-external-bind
+      --disable-rpc-login
+      --daemon-address monerod:18081
+      --log-level=1
+      "
+    networks:
+      - based-market-network
+
+  # Backend API Server
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: based_games_backend
-    env_file:
-      - docker.env
-    environment:
-      NODE_ENV: ${NODE_ENV}
-      PORT: ${PORT}
-      DATABASE_URL: ${DATABASE_URL}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
-      FRONTEND_URL: ${FRONTEND_URL}
-      MONERO_DAEMON_URL: ${MONERO_DAEMON_URL}
-      MONERO_WALLET_RPC_URL: ${MONERO_WALLET_RPC_URL}
-      CREATE_SAMPLE_DATA: ${CREATE_SAMPLE_DATA}
-    ports:
-      - "3001:3001"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+    container_name: based-market-backend
+    restart: unless-stopped
     depends_on:
-      postgres:
-        condition: service_healthy
-    command: npm run dev
+      - monerod
+      - monero-wallet-rpc
+    volumes:
+      - backend_data:/app/data
+      - ./backend:/app/src
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3001
+      
+      # Storage Configuration - ActivityPub Mode
+      - STORAGE_MODE=activitypub
+      - DATABASE_URL=file:/app/data/marketplace.db
+      
+      # ActivityPub Configuration
+      - ACTIVITYPUB_DOMAIN=${ACTIVITYPUB_DOMAIN:-localhost:3001}
+      - ACTIVITYPUB_BASE_URL=${ACTIVITYPUB_BASE_URL:-http://localhost:3001}
+      
+      # JWT Configuration
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-change-in-production}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      
+      # Monero Configuration
+      - MONERO_DAEMON_URL=http://monerod:18081
+      - MONERO_WALLET_RPC_URL=http://monero-wallet-rpc:18083
+      - MONERO_WALLET_PASSWORD=${MONERO_WALLET_PASSWORD:-marketplace123}
+      
+      # CORS
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      
+      # Development
+      - CREATE_SAMPLE_DATA=${CREATE_SAMPLE_DATA:-false}
+    networks:
+      - based-market-network
 
   # Frontend React App
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: based_games_frontend
-    env_file:
-      - docker.env
-    environment:
-      VITE_API_URL: ${VITE_API_URL}
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    container_name: based-market-frontend
+    restart: unless-stopped
     depends_on:
       - backend
-    command: npm run dev
-
-  # Monero Daemon
-  monerod:
-    image: sethsimmons/simple-monerod:latest
-    container_name: based_games_monerod
     ports:
-      - "18080:18080"  # P2P port
-      - "18081:18081"  # RPC port
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:3001/api}
+      - VITE_ACTIVITYPUB_DOMAIN=${ACTIVITYPUB_DOMAIN:-localhost:3001}
     volumes:
-      - monerod_data:/home/monero
-    command: [
-      "--rpc-bind-ip=0.0.0.0",
-      "--rpc-bind-port=18081", 
-      "--confirm-external-bind",
-      "--non-interactive",
-      "--testnet",
-      "--disable-dns-checkpoints",
-      "--log-level=1"
-    ]
-    restart: unless-stopped
+      - ./frontend:/app/src
+    networks:
+      - based-market-network
 
-  # Monero Wallet RPC
-  monero-wallet-rpc:
-    image: sethsimmons/simple-monerod:latest
-    container_name: based_games_wallet_rpc
+  # SQLite Admin - Database admin interface (development only)
+  sqlite-web:
+    image: coleifer/sqlite-web
+    container_name: based-market-sqlite-admin
+    restart: unless-stopped
+    depends_on:
+      - backend
     ports:
-      - "18083:18083"
+      - "8081:8080"
     volumes:
-      - wallet_data:/home/monero
-    depends_on:
-      - monerod
-    command: [
-      "monero-wallet-rpc",
-      "--daemon-address=monerod:18081",
-      "--rpc-bind-ip=0.0.0.0",
-      "--rpc-bind-port=18083",
-      "--confirm-external-bind",
-      "--wallet-file=/home/monero/marketplace-wallet",
-      "--password=dev-wallet-password",
-      "--testnet",
-      "--log-level=1"
-    ]
-    restart: unless-stopped
+      - backend_data:/data
+    command: sqlite_web -H 0.0.0.0 -x /data/marketplace.db
+    networks:
+      - based-market-network
+    profiles:
+      - development
 
-  # Adminer for database management (optional)
-  adminer:
-    image: adminer:latest
-    container_name: based_games_adminer
-    env_file:
-      - docker.env
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
+networks:
+  based-market-network:
+    driver: bridge
 
 volumes:
-  postgres_data:
+  # Monero data persistence
   monerod_data:
-  wallet_data: 
+    driver: local
+  wallet_data:
+    driver: local
+  
+  # Backend data (SQLite + QuickDB + ActivityPub files)
+  backend_data:
+    driver: local 

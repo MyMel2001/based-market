@@ -3,23 +3,33 @@ import { z } from 'zod';
 
 dotenv.config();
 
-const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.coerce.number().default(3001),
-  DATABASE_URL: z.string(),
-  JWT_SECRET: z.string(),
-  JWT_EXPIRES_IN: z.string().default('7d'),
-  FRONTEND_URL: z.string().default('http://localhost:3000'),
-  MONERO_DAEMON_URL: z.string().default('http://localhost:18081'),
-  MONERO_WALLET_RPC_URL: z.string().default('http://localhost:18083'),
-  MONERO_WALLET_PASSWORD: z.string().optional(),
-});
+export const env = {
+  // Server
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  PORT: parseInt(process.env.PORT || '3001'),
+  
+  // Database
+  DATABASE_URL: process.env.DATABASE_URL || 'file:./marketplace.db',
+  
+  // JWT
+  JWT_SECRET: process.env.JWT_SECRET || 'fallback-secret-key',
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
+  
+  // Monero
+  MONERO_DAEMON_URL: process.env.MONERO_DAEMON_URL || 'http://localhost:18081',
+  MONERO_WALLET_RPC_URL: process.env.MONERO_WALLET_RPC_URL || 'http://localhost:18083',
+  MONERO_WALLET_PASSWORD: process.env.MONERO_WALLET_PASSWORD || '',
+  
+  // CORS
+  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
+  
+  // Sample Data
+  CREATE_SAMPLE_DATA: process.env.CREATE_SAMPLE_DATA === 'true',
 
-const envResult = envSchema.safeParse(process.env);
-
-if (!envResult.success) {
-  console.error('❌ Invalid environment variables:', envResult.error.format());
-  process.exit(1);
-}
-
-export const env = envResult.data; 
+  // ActivityPub Configuration  
+  ACTIVITYPUB_DOMAIN: process.env.ACTIVITYPUB_DOMAIN || 'localhost:3001',
+  ACTIVITYPUB_BASE_URL: process.env.ACTIVITYPUB_BASE_URL || 'http://localhost:3001',
+  
+  // Storage Mode: 'database' for traditional DB, 'activitypub' for decentralized storage
+  STORAGE_MODE: process.env.STORAGE_MODE || 'activitypub'
+} as const; 
