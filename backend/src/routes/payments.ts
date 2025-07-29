@@ -3,6 +3,7 @@ import { z } from 'zod';
 import prisma from '@/config/database';
 import { authenticate, AuthRequest } from '@/middleware/auth';
 import { moneroService } from '@/services/monero';
+import { feesService } from '@/services/fees';
 
 const router = Router();
 
@@ -81,13 +82,20 @@ router.post('/create', authenticate, async (req: AuthRequest, res) => {
       `Payment for ${product.title} by ${req.user!.username}`
     );
 
-    // Create transaction record
+    // Calculate fees
+    const feeCalculation = feesService.calculateFees(product.price);
+    
+    // Create transaction record with fee breakdown
     const transaction = await prisma.transaction.create({
       data: {
         productId: productId,
         buyerId: req.user!.id,
-        sellerId: product.developerId,
         amount: product.price,
+        marketplaceFeeRate: feeCalculation.feeRate,
+        marketplaceFee: feeCalculation.marketplaceFee,
+        sellerAmount: feeCalculation.sellerAmount,
+        instanceOwnerAddress: feeCalculation.instanceOwnerAddress,
+        sellerAddress: product.developer.moneroAddress || '',
         status: 'PENDING',
       },
     });
@@ -98,6 +106,12 @@ router.post('/create', authenticate, async (req: AuthRequest, res) => {
         transaction,
         paymentAddress: paymentAddress.address,
         amount: product.price,
+        feeBreakdown: {
+          totalAmount: feeCalculation.totalAmount,
+          marketplaceFee: feeCalculation.marketplaceFee,
+          sellerAmount: feeCalculation.sellerAmount,
+          feePercentage: (feeCalculation.feeRate * 100).toFixed(1) + '%',
+        },
         product: {
           id: product.id,
           title: product.title,

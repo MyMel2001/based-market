@@ -11,6 +11,7 @@ import { activityPubService } from './services/activitypub';
 import authRoutes from './routes/auth';
 import gamesRoutes from './routes/games';
 import paymentsRoutes from './routes/payments';
+import feesRoutes from './routes/fees';
 
 const app = express();
 
@@ -62,6 +63,7 @@ async function initializeServices() {
 app.use('/api/auth', authRoutes);
 app.use('/api/games', gamesRoutes);
 app.use('/api/payments', paymentsRoutes);
+app.use('/api/fees', feesRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

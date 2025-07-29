@@ -20,6 +20,10 @@ export const env = {
   MONERO_WALLET_RPC_URL: process.env.MONERO_WALLET_RPC_URL || 'http://localhost:18083',
   MONERO_WALLET_PASSWORD: process.env.MONERO_WALLET_PASSWORD || '',
   
+  // Marketplace Configuration
+  MARKETPLACE_FEE_RATE: parseFloat(process.env.MARKETPLACE_FEE_RATE || '0.30'), // 30% default
+  INSTANCE_OWNER_MONERO_ADDRESS: process.env.INSTANCE_OWNER_MONERO_ADDRESS || '',
+  
   // CORS
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
   

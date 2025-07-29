@@ -122,6 +122,51 @@ class MoneroService {
       throw new Error('Failed to send payment');
     }
   }
+
+  async sendSplitPayment(
+    destinations: Array<{ address: string; amount: string }>, 
+    accountIndex: number = 0
+  ) {
+    if (!this.wallet) {
+      throw new Error('Wallet not initialized');
+    }
+
+    try {
+      const tx = await this.wallet.createTx({
+        accountIndex,
+        destinations: destinations.map(dest => ({
+          address: dest.address,
+          amount: BigInt(parseFloat(dest.amount) * 1e12), // Convert XMR to atomic units
+        })),
+        relay: true,
+      });
+
+      return {
+        txHash: tx.getHash(),
+        fee: tx.getFee().toString(),
+        destinations: destinations.map(dest => ({
+          address: dest.address,
+          amount: dest.amount
+        })),
+      };
+    } catch (error) {
+      console.error('Error sending split payment:', error);
+      throw new Error('Failed to send split payment');
+    }
+  }
+
+  calculateFees(totalAmount: string, feeRate: number) {
+    const total = parseFloat(totalAmount);
+    const marketplaceFee = total * feeRate;
+    const sellerAmount = total - marketplaceFee;
+    
+    return {
+      totalAmount: total,
+      marketplaceFee,
+      sellerAmount,
+      feeRate
+    };
+  }
 }
 
 export const moneroService = new MoneroService(); 
