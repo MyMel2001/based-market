@@ -18,6 +18,9 @@ export const env = {
   // Monero
   MONERO_DAEMON_URL: process.env.MONERO_DAEMON_URL || 'http://localhost:18081',
   MONERO_WALLET_RPC_URL: process.env.MONERO_WALLET_RPC_URL || 'http://localhost:18083',
+  
+  // ActivityPub
+  ACTIVITYPUB_MONGO_URL: process.env.ACTIVITYPUB_MONGO_URL || 'mongodb://localhost:27017/basedmarket_activitypub',
   MONERO_WALLET_PASSWORD: process.env.MONERO_WALLET_PASSWORD || '',
   
   // Marketplace Configuration

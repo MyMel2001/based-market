@@ -154,9 +154,9 @@ router.post('/', authenticate, requireRole(['DEVELOPER', 'ADMIN']), async (req: 
     // Handle backward compatibility for gameUrl
     let data;
     if (req.body.gameUrl && !req.body.productUrl) {
-      data = createGameSchema.parse(req.body);
-      data = { ...data, productUrl: data.gameUrl, type: 'GAME' };
-      delete data.gameUrl;
+      const parsedData = createGameSchema.parse(req.body);
+      const { gameUrl, ...rest } = parsedData;
+      data = { ...rest, productUrl: gameUrl, type: 'GAME' as const };
     } else {
       data = createProductSchema.parse(req.body);
     }
@@ -205,9 +205,9 @@ router.put('/:id', authenticate, async (req: AuthRequest, res) => {
     // Handle backward compatibility for gameUrl
     let data;
     if (req.body.gameUrl && !req.body.productUrl) {
-      data = updateGameSchema.parse(req.body);
-      data = { ...data, productUrl: data.gameUrl };
-      delete data.gameUrl;
+      const parsedData = updateGameSchema.parse(req.body);
+      const { gameUrl, ...rest } = parsedData;
+      data = { ...rest, productUrl: gameUrl };
     } else {
       data = updateProductSchema.parse(req.body);
     }
@@ -355,8 +355,7 @@ router.get('/my/products', authenticate, requireRole(['DEVELOPER', 'ADMIN']), as
 // Backward compatibility endpoint
 router.get('/my/games', authenticate, requireRole(['DEVELOPER', 'ADMIN']), async (req: AuthRequest, res) => {
   // Redirect to the new endpoint
-  req.url = '/my/products';
-  return router.handle(req, res);
+  return res.redirect('/api/my/products');
 });
 
 export default router; 

@@ -64,8 +64,8 @@ router.post('/register', async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { id: userResponse.id, email: userResponse.email },
-      env.JWT_SECRET,
-      { expiresIn: env.JWT_EXPIRES_IN }
+      env.JWT_SECRET as string,
+      { expiresIn: env.JWT_EXPIRES_IN as string }
     );
 
     res.status(201).json({
@@ -122,8 +122,8 @@ router.post('/login', async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      env.JWT_SECRET,
-      { expiresIn: env.JWT_EXPIRES_IN }
+      env.JWT_SECRET as string,
+      { expiresIn: env.JWT_EXPIRES_IN as string }
     );
 
     const { password: _, ...userWithoutPassword } = user;
