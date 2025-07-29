@@ -106,8 +106,8 @@ services:
   # Frontend React App
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./frontend/Dockerfile
     container_name: based-market-frontend
     restart: unless-stopped
     depends_on:
