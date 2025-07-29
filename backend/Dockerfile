@@ -22,9 +22,9 @@ RUN npm install
 WORKDIR /app/shared
 RUN npm run build
 
-# Install backend dependencies
+# Install backend dependencies (including devDependencies for build tools)
 WORKDIR /app/backend
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy backend source code
 COPY backend/ ./
