@@ -41,12 +41,16 @@ class DatabaseStorage implements StorageInterface {
 
   async initialize(): Promise<void> {
     // Prisma connection is automatic for SQLite
-    console.log('SQLite database storage initialized');
+    console.log('🔍 Initializing SQLite database storage...');
     
     // Test database connection
     try {
       await this.prisma.$connect();
       console.log('✅ SQLite database connected successfully');
+      
+      // Test a simple query to ensure database is working
+      await this.prisma.$queryRaw`SELECT 1`;
+      console.log('✅ SQLite database query test passed');
     } catch (error) {
       console.error('❌ Failed to connect to SQLite database:', error);
       throw error;

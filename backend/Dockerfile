@@ -29,6 +29,9 @@ RUN npm ci
 # Copy backend source code
 COPY backend/ ./
 
+# Generate Prisma client
+RUN npm run db:generate
+
 # Build backend
 RUN npm run build
 
@@ -48,6 +51,10 @@ USER marketplace
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:${PORT:-3001}/health || exit 1
 
+# Copy startup script
+COPY backend/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 EXPOSE 3001
 
-CMD ["npm", "start"] 
+CMD ["/app/start.sh"] 

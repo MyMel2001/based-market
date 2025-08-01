@@ -2,7 +2,7 @@ import { QuickDB } from 'quick.db';
 import path from 'path';
 
 // Initialize QuickDB for fast key-value operations
-const dbPath = path.join(process.cwd(), 'quickdb.sqlite');
+const dbPath = path.join(process.env.NODE_ENV === 'production' ? '/app/data' : process.cwd(), 'quickdb.sqlite');
 const quickDB = new QuickDB({ filePath: dbPath });
 
 export interface QuickDBService {
@@ -143,6 +143,17 @@ class QuickDBServiceImpl implements QuickDBService {
 
 // Export singleton instance
 export const quickDBService = new QuickDBServiceImpl();
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('🔄 Closing QuickDB connection...');
+  await quickDB.close();
+});
+
+process.on('SIGTERM', async () => {
+  console.log('🔄 Closing QuickDB connection...');
+  await quickDB.close();
+});
 
 // Export metrics helper
 export const metrics = {

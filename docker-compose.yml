@@ -22,6 +22,12 @@ services:
       --testnet
       --log-level=1
       --max-log-file-size=104857600
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18081/json_rpc", "-d", '{"jsonrpc":"2.0","id":"0","method":"get_info"}', "-H", "Content-Type: application/json"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     networks:
       - based-market-network
 
@@ -31,7 +37,8 @@ services:
     container_name: based-market-wallet-rpc
     restart: unless-stopped
     depends_on:
-      - monerod
+      monerod:
+        condition: service_healthy
     volumes:
       - wallet_data:/home/monero/wallet
     ports:
@@ -40,11 +47,14 @@ services:
       - WALLET_PASSWORD=${MONERO_WALLET_PASSWORD:-marketplace123}
     command: >
       sh -c "
-      sleep 30 &&
+      echo 'Waiting for monerod to be ready...' &&
+      sleep 45 &&
+      echo 'Checking wallet...' &&
       if [ ! -f /home/monero/wallet/marketplace-wallet ]; then
         echo 'Creating new wallet...' &&
-        monero-wallet-cli --testnet --generate-new-wallet /home/monero/wallet/marketplace-wallet --password $$WALLET_PASSWORD --mnemonic-language English --command exit;
+        monero-wallet-cli --testnet --generate-new-wallet /home/monero/wallet/marketplace-wallet --password $$WALLET_PASSWORD --mnemonic-language English --command exit || echo 'Wallet creation failed, continuing...';
       fi &&
+      echo 'Starting wallet RPC...' &&
       monero-wallet-rpc
       --testnet
       --rpc-bind-ip=0.0.0.0
@@ -56,6 +66,12 @@ services:
       --daemon-address monerod:18081
       --log-level=1
       "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18083/json_rpc", "-d", '{"jsonrpc":"2.0","id":"0","method":"get_balance"}', "-H", "Content-Type: application/json"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
     networks:
       - based-market-network
 
@@ -67,8 +83,10 @@ services:
     container_name: based-market-backend
     restart: unless-stopped
     depends_on:
-      - monerod
-      - monero-wallet-rpc
+      monerod:
+        condition: service_healthy
+      monero-wallet-rpc:
+        condition: service_healthy
     volumes:
       - backend_data:/app/data
       - ./backend:/app/src

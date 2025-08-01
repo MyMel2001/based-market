@@ -189,25 +189,37 @@ process.on('SIGTERM', async () => {
 
 // Start server
 async function startServer() {
-  await initializeServices();
-  
-  const port = env.PORT || 3001;
-  app.listen(port, () => {
-    console.log(`🚀 Server running on port ${port}`);
-    console.log(`📦 Storage mode: ${env.STORAGE_MODE}`);
+  try {
+    await initializeServices();
     
-    if (env.STORAGE_MODE === 'activitypub') {
-      console.log(`🌐 ActivityPub federation enabled`);
-      console.log(`🔗 Federation domain: ${env.ACTIVITYPUB_DOMAIN}`);
-      console.log(`📡 WebFinger: ${env.ACTIVITYPUB_BASE_URL}/.well-known/webfinger`);
-      console.log(`📄 NodeInfo: ${env.ACTIVITYPUB_BASE_URL}/.well-known/nodeinfo`);
-    } else {
-      console.log(`💾 Traditional database mode`);
-    }
-    
-    console.log(`🏠 Frontend URL: ${env.FRONTEND_URL}`);
-    console.log(`⚡ Environment: ${env.NODE_ENV}`);
-  });
+    const port = env.PORT || 3001;
+    const server = app.listen(port, () => {
+      console.log(`🚀 Server running on port ${port}`);
+      console.log(`📦 Storage mode: ${env.STORAGE_MODE}`);
+      
+      if (env.STORAGE_MODE === 'activitypub') {
+        console.log(`🌐 ActivityPub federation enabled`);
+        console.log(`🔗 Federation domain: ${env.ACTIVITYPUB_DOMAIN}`);
+        console.log(`📡 WebFinger: ${env.ACTIVITYPUB_BASE_URL}/.well-known/webfinger`);
+        console.log(`📄 NodeInfo: ${env.ACTIVITYPUB_BASE_URL}/.well-known/nodeinfo`);
+      } else {
+        console.log(`💾 Traditional database mode`);
+      }
+      
+      console.log(`🏠 Frontend URL: ${env.FRONTEND_URL}`);
+      console.log(`⚡ Environment: ${env.NODE_ENV}`);
+    });
+
+    // Handle server errors
+    server.on('error', (error) => {
+      console.error('❌ Server error:', error);
+      process.exit(1);
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
 }
 
 startServer().catch((error) => {

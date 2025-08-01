@@ -71,8 +71,14 @@ class ActivityPubService {
   }
 
   async initialize(): Promise<void> {
-    // Ensure SQLite tables for ActivityPub storage
-    await this.ensureTables();
+    try {
+      // Ensure SQLite tables for ActivityPub storage
+      await this.ensureTables();
+      console.log('✅ ActivityPub tables ensured');
+    } catch (error) {
+      console.error('❌ Failed to ensure ActivityPub tables:', error);
+      throw error;
+    }
 
     // Configure ActivityPub routes
     const routes = {
