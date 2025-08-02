@@ -2,7 +2,7 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install dependencies (git for npm, curl for health checks)
+# Install dependencies (curl, git)
 RUN apk add --no-cache curl git
 
 # Copy root package.json for workspace setup
@@ -26,7 +26,7 @@ RUN npm install
 WORKDIR /app/shared
 RUN npm run build
 
-# Install frontend dependencies (including devDependencies for build tools)
+# Switch to frontend directory and install dependencies
 WORKDIR /app/frontend
 RUN npm ci
 
@@ -40,15 +40,15 @@ RUN npm run build
 RUN addgroup -g 1001 -S marketplace && \
     adduser -S marketplace -u 1001
 
-# Change ownership
-RUN chown -R marketplace:marketplace /app
+# Change ownership of all necessary directories to the new user
+RUN chown -R marketplace:marketplace /app /app/frontend /app/shared
 
 USER marketplace
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+# Health check with longer start period (60s instead of default 30s)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=5 \
   CMD curl -f http://localhost:${PORT:-3000}/ || exit 1
 
 EXPOSE 3000
 
-CMD ["npm", "run", "preview"] 
+CMD ["npm", "run", "preview"]
