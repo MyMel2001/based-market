@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { env } from '../config/env';
 import prisma from '../config/database';
 import { quickDBService } from './quickdb';
+import { ActivityPubError, ActivityPubErrorType } from '../errors';
 
 export interface ActivityPubUser {
   id: string;
@@ -308,8 +309,18 @@ class ActivityPubService {
       const actor = await this.getActorFromSQLite(actorId);
       return actor as ActivityPubUser;
     } catch (error) {
-      console.error('Error getting user:', error);
-      return null;
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new ActivityPubError(
+          ActivityPubErrorType.SQLITE_ERROR,
+          `Failed to retrieve user ${identifier}`,
+          error
+        );
+      }
+      throw new ActivityPubError(
+        ActivityPubErrorType.SERVICE_UNAVAILABLE,
+        'Failed to get user due to service error',
+        error
+      );
     }
   }
 
@@ -319,8 +330,18 @@ class ActivityPubService {
       const product = await this.getObjectFromSQLite(productId);
       return product as ActivityPubProduct;
     } catch (error) {
-      console.error('Error getting product:', error);
-      return null;
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new ActivityPubError(
+          ActivityPubErrorType.SQLITE_ERROR,
+          `Failed to retrieve product ${productId}`,
+          error
+        );
+      }
+      throw new ActivityPubError(
+        ActivityPubErrorType.PRODUCT_NOT_FOUND,
+        `Product ${productId} not found`,
+        error
+      );
     }
   }
 
