@@ -29,7 +29,7 @@ services:
     container_name: based-market-wallet-rpc
     restart: unless-stopped
     depends_on:
-      monerod
+      - monerod
     volumes:
       - wallet_data:/home/monero/wallet
     ports:
@@ -72,7 +72,7 @@ services:
     container_name: based-market-backend
     restart: unless-stopped
     depends_on:
-      monerod
+      - monerod
       monero-wallet-rpc
     volumes:
       - backend_data:/app/data
