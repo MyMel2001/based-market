@@ -28,9 +28,6 @@ services:
     image: moneromint/monero:latest
     container_name: based-market-wallet-rpc
     restart: unless-stopped
-    depends_on:
-      monerod:
-        condition: service_healthy
     volumes:
       - wallet_data:/home/monero/wallet
     ports:
@@ -73,8 +70,6 @@ services:
     container_name: based-market-backend
     restart: unless-stopped
     depends_on:
-      monerod:
-        condition: service_healthy
       monero-wallet-rpc:
         condition: service_healthy
     volumes:
