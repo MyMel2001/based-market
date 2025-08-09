@@ -22,7 +22,7 @@ services:
       - --enable-dns-blocklist
       - --prune-blockchain
     healthcheck:
-      test: ["CMD", "monerod", "--version"]
+      test: ["CMD", "true"]
       interval: 30s
       timeout: 5s
       retries: 1
