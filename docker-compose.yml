@@ -16,8 +16,10 @@ services:
       --rpc-restricted-bind-ip=0.0.0.0
       --rpc-bind-ricted-port=18081
       --confirm-external-bind
+      --no-igd
+      --no-zmq
       --public-node
-      --non-interactive
+      --enable-dns-blocklist
       --prune-blockchain
     healthcheck:
       test: ["CMD", "echo", "SKIP"]
