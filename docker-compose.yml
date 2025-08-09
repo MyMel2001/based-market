@@ -13,13 +13,12 @@ services:
       - "18081:18081"
     command: >
       monerod
-      --rpc-bind-ip=0.0.0.0
-      --rpc-bind-port=18081
+      --rpc-restricted-bind-ip=0.0.0.0
+      --rpc-bind-ricted-port=18081
       --confirm-external-bind
+      --public-node
       --non-interactive
-      --log-level=1
-      --max-log-file-size=104857600
-      --enable-dns-blocklist
+      --prune-blockchain
     healthcheck:
       test: ["CMD", "echo", "SKIP"]
     networks:
