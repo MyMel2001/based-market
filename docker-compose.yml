@@ -84,7 +84,7 @@ services:
     volumes:
       - backend_data:/app/data
       - ./backend:/app/src
-      - ./wallet:/home/monero/wallet/
+      # Removed the `wallet` volume mapping from backend
     ports:
       - "${BACKEND_PORT:-3001}:3001"
     environment:
