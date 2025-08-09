@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   # Monero Daemon
-    monerod:
+  monerod:
     image: sethsimmons/simple-monerod:latest
     container_name: based-market-monerod
     restart: unless-stopped
@@ -28,7 +28,6 @@ services:
       start_period: 60s
     networks:
       - based-market-network
-
 
   # Monero Wallet RPC
   monero-wallet-rpc:
