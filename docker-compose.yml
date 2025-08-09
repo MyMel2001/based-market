@@ -22,12 +22,6 @@ services:
       --no-zmq
       --enable-dns-blocklist
       --prune-blockchain
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:18081/get_info"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
 
   # Monero Wallet RPC
   monero-wallet-rpc:
