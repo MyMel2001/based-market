@@ -14,7 +14,6 @@ services:
     networks:
       - based-market-network
     command: >
-      monerod
       --rpc-restricted-bind-ip=0.0.0.0
       --rpc-restricted-bind-port=18081
       --public-node
@@ -37,13 +36,6 @@ services:
     environment:
       - WALLET_PASSWORD=${MONERO_WALLET_PASSWORD:-marketplace123}
     command: >
-      sh -c '
-      echo "Waiting for monerod to be ready..." &&
-      sleep 45 &&
-      if [ ! -f /home/monero/wallet/marketplace-wallet ]; then
-        monero-wallet-cli --generate-new-wallet /home/monero/wallet/marketplace-wallet --password "$$WALLET_PASSWORD" --mnemonic-language English --command exit || echo "Wallet creation failed, continuing...";
-      fi &&
-      monero-wallet-rpc  
         --rpc-bind-ip=0.0.0.0
         --rpc-bind-port=18083
         --wallet-file /home/monero/wallet/marketplace-wallet
@@ -52,7 +44,6 @@ services:
         --disable-rpc-login
         --daemon-address monerod:18081
         --log-level=1
-      '
     networks:
       - based-market-network
 
