@@ -2,29 +2,26 @@ version: "3.8"
 
 services:
   # Monero Daemon
-  monerod:
-    image: ghcr.io/sethforprivacy/simple-monerod:latest
-    container_name: based-market-monerod
-    restart: unless-stopped
-    volumes:
-      - monerod_data:/home/monero/.bitmonero
-    ports:
-      - "18080:18080"
-      - "18081:18081"
-    command: >
-      monerod
-      --rpc-restricted-bind-ip=0.0.0.0
-      --rpc-bind-ricted-port=18081
-      --confirm-external-bind
-      --no-igd
-      --no-zmq
-      --public-node
-      --enable-dns-blocklist
-      --prune-blockchain
-    healthcheck:
-      test: ["CMD", "echo", "SKIP"]
-    networks:
-      - based-market-network
+    monerod:
+      image: sethsimmons/simple-monerod:latest
+      container_name: based-market-monerod
+      restart: unless-stopped
+      volumes:
+        - monerod_data:/home/monero/.bitmonero
+      ports:
+        - "18080:18080"
+        - "18081:18081"
+      networks:
+        - based-market-network
+      command: >
+        --rpc-restricted-bind-ip=0.0.0.0
+        --rpc-restricted-bind-port=18081
+        --public-node
+        --no-igd
+        --no-zmq
+        --enable-dns-blocklist
+        --prune-blockchain
+
 
   # Monero Wallet RPC
   monero-wallet-rpc:
