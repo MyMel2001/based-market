@@ -73,7 +73,7 @@ services:
     restart: unless-stopped
     depends_on:
       - monerod
-      monero-wallet-rpc
+      - monero-wallet-rpc
     volumes:
       - backend_data:/app/data
       - ./backend:/app/src
