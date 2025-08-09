@@ -41,10 +41,9 @@ services:
       echo "Waiting for monerod to be ready..." &&
       sleep 45 &&
       if [ ! -f /home/monero/wallet/marketplace-wallet ]; then
-        monero-wallet-cli --testnet --generate-new-wallet /home/monero/wallet/marketplace-wallet --password "$$WALLET_PASSWORD" --mnemonic-language English --command exit || echo "Wallet creation failed, continuing...";
+        monero-wallet-cli --generate-new-wallet /home/monero/wallet/marketplace-wallet --password "$$WALLET_PASSWORD" --mnemonic-language English --command exit || echo "Wallet creation failed, continuing...";
       fi &&
-      monero-wallet-rpc
-        --testnet
+      monero-wallet-rpc  
         --rpc-bind-ip=0.0.0.0
         --rpc-bind-port=18083
         --wallet-file /home/monero/wallet/marketplace-wallet
