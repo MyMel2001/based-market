@@ -13,21 +13,28 @@ services:
       - "18081:18081"
     networks:
       - based-market-network
-    command: >
-      --rpc-restricted-bind-ip=0.0.0.0
-      --rpc-restricted-bind-port=18081
-      --public-node
-      --no-igd
-      --no-zmq
-      --enable-dns-blocklist
-      --prune-blockchain
-
+    command:
+      - --rpc-restricted-bind-ip=0.0.0.0
+      - --rpc-restricted-bind-port=18081
+      - --public-node
+      - --no-igd
+      - --no-zmq
+      - --enable-dns-blocklist
+      - --prune-blockchain
+    healthcheck:
+      test: ["CMD", "monerod", "--version"]
+      interval: 30s
+      timeout: 5s
+      retries: 1
 
   # Monero Wallet RPC
   monero-wallet-rpc:
     image: moneromint/monero:latest
     container_name: based-market-wallet-rpc
     restart: unless-stopped
+    depends_on:
+      monerod:
+        condition: service_healthy
     volumes:
       - wallet_data:/home/monero/wallet
     ports:
@@ -70,6 +77,8 @@ services:
     container_name: based-market-backend
     restart: unless-stopped
     depends_on:
+      monerod:
+        condition: service_healthy
       monero-wallet-rpc:
         condition: service_healthy
     volumes:
