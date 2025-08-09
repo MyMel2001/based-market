@@ -13,21 +13,22 @@ services:
       - "18081:18081"
     networks:
       - based-market-network
-    command:
-      - --rpc-restricted-bind-ip=0.0.0.0
-      - --rpc-restricted-bind-port=18081
-      - --public-node
-      - --no-igd
-      - --no-zmq
-      - --enable-dns-blocklist
-      - --prune-blockchain
+    command: >
+      monerod
+      --rpc-restricted-bind-ip=0.0.0.0
+      --rpc-restricted-bind-port=18081
+      --public-node
+      --no-igd
+      --no-zmq
+      --enable-dns-blocklist
+      --prune-blockchain
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:18081/get_info"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 60s
-      
+
   # Monero Wallet RPC
   monero-wallet-rpc:
     image: moneromint/monero:latest
