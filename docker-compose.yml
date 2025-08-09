@@ -3,7 +3,7 @@ version: "3.8"
 services:
   # Monero Daemon
   monerod:
-    image: sethsimmons/simple-monerod:latest
+    image: ghcr.io/sethforprivacy/simple-monerod:latest
     container_name: based-market-monerod
     restart: unless-stopped
     volumes:
