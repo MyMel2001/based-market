@@ -1,9 +1,7 @@
-version: '3.8'
+version: "3.8"
 
 services:
-
-
-  # Monero Daemon (monerod) - Required for payments
+  # Monero Daemon
   monerod:
     image: sethsimmons/simple-monerod:latest
     container_name: based-market-monerod
@@ -19,11 +17,38 @@ services:
       --rpc-bind-port=18081
       --confirm-external-bind
       --non-interactive
-      --testnet
+      --log-level=1
+      --max-log-file-size=104857600
+      --enable-dns-blocklist
+    healthcheck:
+      test: ["CMD-SHELL", "monerod status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - based-market-network
+
+    image: sethsimmons/simple-monerod:latest
+    container_name: based-market-monerod
+    restart: unless-stopped
+    volumes:
+      - monerod_data:/home/monero/.bitmonero
+    ports:
+      - "18080:18080"
+      - "18081:18081"
+    command: >
+      monerod
+      --rpc-bind-ip=0.0.0.0
+      --rpc-bind-port=18081
+      --confirm-external-bind
+      --non-interactive
       --log-level=1
       --max-log-file-size=104857600
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:18081/json_rpc", "-d", '{"jsonrpc":"2.0","id":"0","method":"get_info"}', "-H", "Content-Type: application/json"]
+      test: ["CMD", "curl", "-sf", "-H", "Content-Type: application/json",
+             "-d", "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"get_info\"}",
+             "http://localhost:18081/json_rpc"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -31,9 +56,9 @@ services:
     networks:
       - based-market-network
 
-  # Monero Wallet RPC - Persistent wallet management
+  # Monero Wallet RPC
   monero-wallet-rpc:
-    image: sethsimmons/simple-monerod:latest
+    image: monero-project/monero:latest
     container_name: based-market-wallet-rpc
     restart: unless-stopped
     depends_on:
@@ -46,28 +71,30 @@ services:
     environment:
       - WALLET_PASSWORD=${MONERO_WALLET_PASSWORD:-marketplace123}
     command: >
-      sh -c "
-      echo 'Waiting for monerod to be ready...' &&
+      sh -c '
+      echo "Waiting for monerod to be ready..." &&
       sleep 45 &&
-      echo 'Checking wallet...' &&
+      echo "Checking wallet..." &&
       if [ ! -f /home/monero/wallet/marketplace-wallet ]; then
-        echo 'Creating new wallet...' &&
-        monero-wallet-cli --testnet --generate-new-wallet /home/monero/wallet/marketplace-wallet --password $$WALLET_PASSWORD --mnemonic-language English --command exit || echo 'Wallet creation failed, continuing...';
+        echo "Creating new wallet..." &&
+        monero-wallet-cli --testnet --generate-new-wallet /home/monero/wallet/marketplace-wallet --password "$$WALLET_PASSWORD" --mnemonic-language English --command exit || echo "Wallet creation failed, continuing...";
       fi &&
-      echo 'Starting wallet RPC...' &&
+      echo "Starting wallet RPC..." &&
       monero-wallet-rpc
-      --testnet
-      --rpc-bind-ip=0.0.0.0
-      --rpc-bind-port=18083
-      --wallet-file /home/monero/wallet/marketplace-wallet
-      --password $$WALLET_PASSWORD
-      --confirm-external-bind
-      --disable-rpc-login
-      --daemon-address monerod:18081
-      --log-level=1
-      "
+        --testnet
+        --rpc-bind-ip=0.0.0.0
+        --rpc-bind-port=18083
+        --wallet-file /home/monero/wallet/marketplace-wallet
+        --password "$$WALLET_PASSWORD"
+        --confirm-external-bind
+        --disable-rpc-login
+        --daemon-address monerod:18081
+        --log-level=1
+      '
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:18083/json_rpc", "-d", '{"jsonrpc":"2.0","id":"0","method":"get_balance"}', "-H", "Content-Type: application/json"]
+      test: ["CMD", "curl", "-sf", "-H", "Content-Type: application/json",
+             "-d", "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"get_balance\"}",
+             "http://localhost:18083/json_rpc"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -75,7 +102,6 @@ services:
     networks:
       - based-market-network
 
-  # Backend API Server
   backend:
     build:
       context: .
@@ -95,33 +121,20 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3001
-      
-      # Storage Configuration - ActivityPub Mode
       - STORAGE_MODE=activitypub
       - DATABASE_URL=file:/app/data/marketplace.db
-      
-      # ActivityPub Configuration
       - ACTIVITYPUB_DOMAIN=${ACTIVITYPUB_DOMAIN:-localhost:3001}
       - ACTIVITYPUB_BASE_URL=${ACTIVITYPUB_BASE_URL:-http://localhost:3001}
-      
-      # JWT Configuration
       - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-change-in-production}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
-      
-      # Monero Configuration
       - MONERO_DAEMON_URL=http://monerod:18081
       - MONERO_WALLET_RPC_URL=http://monero-wallet-rpc:18083
       - MONERO_WALLET_PASSWORD=${MONERO_WALLET_PASSWORD:-marketplace123}
-      
-      # CORS
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
-      
-      # Development
       - CREATE_SAMPLE_DATA=${CREATE_SAMPLE_DATA:-false}
     networks:
       - based-market-network
 
-  # Frontend React App
   frontend:
     build:
       context: .
@@ -140,7 +153,6 @@ services:
     networks:
       - based-market-network
 
-  # SQLite Admin - Database admin interface (development only)
   sqlite-web:
     image: coleifer/sqlite-web
     container_name: based-market-sqlite-admin
@@ -162,12 +174,6 @@ networks:
     driver: bridge
 
 volumes:
-  # Monero data persistence
   monerod_data:
-    driver: local
   wallet_data:
-    driver: local
-  
-  # Backend data (SQLite + QuickDB + ActivityPub files)
   backend_data:
-    driver: local 

@@ -12,6 +12,7 @@ yarn-error.log*
 .env.production.local
 backend/.env
 frontend/.env
+docker.env
 
 # Build outputs
 dist/
