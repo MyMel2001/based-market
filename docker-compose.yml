@@ -31,46 +31,47 @@ services:
 
   # Monero Wallet RPC
   monero-wallet-rpc:
-  image: moneromint/monero:latest
-  container_name: based-market-wallet-rpc
-  restart: unless-stopped
-  depends_on:
-    monerod:
-      condition: service_healthy
-  volumes:
-    - wallet_data:/home/monero/wallet
-  ports:
-    - "18083:18083"
-  environment:
-    - WALLET_PASSWORD=${MONERO_WALLET_PASSWORD:-marketplace123}
-  command: >
-    sh -c '
-    echo "Waiting for monerod to be ready..." &&
-    sleep 45 &&
-    if [ ! -f /home/monero/wallet/marketplace-wallet ]; then
-      monero-wallet-cli --testnet --generate-new-wallet /home/monero/wallet/marketplace-wallet --password "$$WALLET_PASSWORD" --mnemonic-language English --command exit || echo "Wallet creation failed, continuing...";
-    fi &&
-    monero-wallet-rpc
-      --testnet
-      --rpc-bind-ip=0.0.0.0
-      --rpc-bind-port=18083
-      --wallet-file /home/monero/wallet/marketplace-wallet
-      --password "$$WALLET_PASSWORD"
-      --confirm-external-bind
-      --disable-rpc-login
-      --daemon-address monerod:18081
-      --log-level=1
-    '
-  healthcheck:
-    test: ["CMD", "curl", "-sf", "-H", "Content-Type: application/json",
-           "-d", "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"get_balance\"}",
-           "http://localhost:18083/json_rpc"]
-    interval: 30s
-    timeout: 10s
-    retries: 3
-    start_period: 90s
-  networks:
-    - based-market-network
+    image: moneromint/monero:latest
+    container_name: based-market-wallet-rpc
+    restart: unless-stopped
+    depends_on:
+      monerod:
+        condition: service_healthy
+    volumes:
+      - wallet_data:/home/monero/wallet
+    ports:
+      - "18083:18083"
+    environment:
+      - WALLET_PASSWORD=${MONERO_WALLET_PASSWORD:-marketplace123}
+    command: >
+      sh -c '
+      echo "Waiting for monerod to be ready..." &&
+      sleep 45 &&
+      if [ ! -f /home/monero/wallet/marketplace-wallet ]; then
+        monero-wallet-cli --testnet --generate-new-wallet /home/monero/wallet/marketplace-wallet --password "$$WALLET_PASSWORD" --mnemonic-language English --command exit || echo "Wallet creation failed, continuing...";
+      fi &&
+      monero-wallet-rpc
+        --testnet
+        --rpc-bind-ip=0.0.0.0
+        --rpc-bind-port=18083
+        --wallet-file /home/monero/wallet/marketplace-wallet
+        --password "$$WALLET_PASSWORD"
+        --confirm-external-bind
+        --disable-rpc-login
+        --daemon-address monerod:18081
+        --log-level=1
+      '
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "-H", "Content-Type: application/json",
+             "-d", "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"get_balance\"}",
+             "http://localhost:18083/json_rpc"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    networks:
+      - based-market-network
+
   backend:
     build:
       context: .
