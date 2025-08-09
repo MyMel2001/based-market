@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   # Monero Daemon
-  monerod:
+    monerod:
     image: sethsimmons/simple-monerod:latest
     container_name: based-market-monerod
     restart: unless-stopped
@@ -29,32 +29,6 @@ services:
     networks:
       - based-market-network
 
-    image: sethsimmons/simple-monerod:latest
-    container_name: based-market-monerod
-    restart: unless-stopped
-    volumes:
-      - monerod_data:/home/monero/.bitmonero
-    ports:
-      - "18080:18080"
-      - "18081:18081"
-    command: >
-      monerod
-      --rpc-bind-ip=0.0.0.0
-      --rpc-bind-port=18081
-      --confirm-external-bind
-      --non-interactive
-      --log-level=1
-      --max-log-file-size=104857600
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "-H", "Content-Type: application/json",
-             "-d", "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"get_info\"}",
-             "http://localhost:18081/json_rpc"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    networks:
-      - based-market-network
 
   # Monero Wallet RPC
   monero-wallet-rpc:
