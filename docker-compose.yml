@@ -25,7 +25,7 @@ services:
 
   # Monero Wallet RPC
   monero-wallet-rpc:
-    image: monero-wallet-rpc:latest
+    image: xmrto/monero-wallet-rpc:latest
     container_name: based-market-wallet-rpc
     restart: unless-stopped
     depends_on:
@@ -56,7 +56,7 @@ services:
       '
     networks:
       - based-market-network
-      
+         
   backend:
     build:
       context: .
