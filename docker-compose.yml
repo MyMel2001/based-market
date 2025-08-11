@@ -49,8 +49,8 @@ services:
 
   backend:
     build:
-      context: .
-      dockerfile: ./backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: based-market-backend
     restart: unless-stopped
     depends_on:
@@ -80,8 +80,8 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: ./frontend/Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: based-market-frontend
     restart: unless-stopped
     depends_on:

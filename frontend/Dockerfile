@@ -47,7 +47,7 @@ USER marketplace
 
 # Health check with longer start period (60s instead of default 30s)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=5 \
-  CMD curl -f http://localhost:${PORT:-3000}/ || exit 1
+  CMD curl -f http://localhost:3000/ || exit 1
 
 EXPOSE 3000
 
